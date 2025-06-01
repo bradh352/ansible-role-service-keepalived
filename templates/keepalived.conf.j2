@@ -1,5 +1,10 @@
 global_defs {
     router_id {{ inventory_hostname | split('.') | first }}
+    vrrp_garp_master_delay 0
+    vrrp_garp_master_repeat 5
+    vrrp_garp_master_refresh 60
+    vrrp_garp_master_refresh_repeat 2
+    vrrp_garp_interval 0.001
 }
 
 includea /etc/keepalived/conf.d/*.conf
