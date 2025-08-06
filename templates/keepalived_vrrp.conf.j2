@@ -10,8 +10,9 @@ vrrp_script {{ item.name }} {
 {% else %}
 {{ notdefiend | mandatory(msg='healthcheck.type value ' ~ healthcheck.type ~ ' not valid') }}
 {% endif %}
-  interval {{ item.healthcheck_interval|default(15) }}
-  timeout {{ item.healthcheck_timeout|default(10) }}
+  user {{ item.healthcheck.user|default("nobody") }}
+  interval {{ item.healthcheck.interval|default(15) }}
+  timeout {{ item.healthcheck.timeout|default(10) }}
   rise 3
   fall 1
   init_fail

@@ -58,6 +58,8 @@ in the future.
       run as the healthcheck.
     * `script_arg`: Optional if `type=script`. This is an argument to pass to
       the user-specified script.
+    * `user`: Optional.  The user to run the healthcheck as.  Defaults to
+      `nobody`.
 
 ## Example Config
 
