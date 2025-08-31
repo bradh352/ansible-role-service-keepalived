@@ -39,9 +39,10 @@ in the future.
   * `ips`: Required. List of IP addresses with subnet mask to assign to
     `interface`. E.g. `10.10.10.100/24`
   * `healthcheck`: Required, contains rules for monitoring the service.
-    * `type`: Type of healthcheck, allowed values are `ip`, `tls`, and `script`.
-      Each option takes one or more arguments.
-    * `timeout`: How long to wait on the healthcheck to complete. Default `10` seconds.
+    * `type`: Type of healthcheck, allowed values are `ip`, `tls`, `http`, and
+      `script`. Each option takes one or more arguments.
+    * `timeout`: How long to wait on the healthcheck to complete. Default `10`
+      seconds.
     * `interval`: How often to run the healthcheck. Default `15` seconds.
     * `host`: Optional if `type` is `ip` or `tls`.  This is the hostname or ip
       to use to query the service.  Typically not used.  Defaults to `localhost`.
@@ -51,9 +52,15 @@ in the future.
       for the check.  This is often the external name and is used by the host
       for looking up the proper TLS certificate to advertise.  If not provided
       uses `host` (or its default value).
-    * `verify_certs`: Optional if `type` is `tls`. This is a boolean value and
-      if true will fail the health check if TLS certificate validation is not
-      successful. Default is `false`.
+    * `verify_certs`: Optional if `type` is `tls` or `http`. This is a boolean
+      value and if true will fail the health check if TLS certificate validation
+      is not successful. Default is `false`.
+    * `url`: Required if `type` is `http`.  This is the full URL to query.
+    * `http_codes`: Optional if `type` is `http`.  This is the comma delimited
+      list of http codes to accept as valid.  Default `200`.
+    * `ip`: Optional if `type` is `http`.  This is the ip address to use rather
+      than DNS resolution.  Useful to combine this with an HTTPS URL and using
+      localhost for full local certificate validation.
     * `script`: Required if `type=script`. This is the full path to the script to
       run as the healthcheck.
     * `script_arg`: Optional if `type=script`. This is an argument to pass to
@@ -73,4 +80,15 @@ keepalived_vips:
     healthcheck:
       type: "ip"
       port: 3306
+  - name: "website"
+    interface: "eth0"
+    ips:
+      - 192.168.1.11/24
+      - 2620:1234:5::11/64
+    healthcheck:
+      type: "http"
+      url: "https://bradhouse.dev"
+      ip: "127.0.0.1"
+      verify_certs: true
+      http_codes: "200,302"
 ```
