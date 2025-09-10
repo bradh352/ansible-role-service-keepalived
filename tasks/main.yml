@@ -17,6 +17,7 @@
   with_items:
     - healthcheck_ip.sh
     - healthcheck_tls.sh
+    - healthcheck_http.sh
 
 - name: "create keepalived include dir"
   file:
