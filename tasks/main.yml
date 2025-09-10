@@ -55,3 +55,6 @@
     name: keepalived
     enabled: true
     state: started
+
+- name: Flush Handlers
+  meta: flush_handlers
