@@ -7,12 +7,30 @@
       - netcat-openbsd
       - openssl
     state: present
+  when: ansible_os_family == 'Debian'
+
+- name: "DNF: install keepalived and helpers"
+  ansible.builtin.dnf:
+    name:
+      - keepalived
+      - curl
+      - netcat
+      - openssl
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: "create keepalived script directory"
+  file:
+    path: /usr/libexec/keepalived
+    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_os_family == 'RedHat' else omit }}"
+    state: directory
 
 - name: "install healthcheck scripts"
   copy:
     src: "{{ item }}"
-    dest: "/usr/local/bin/{{ item }}"
-    mode: "755"
+    dest: "/usr/libexec/keepalived/{{ item }}"
+    mode: "0755"
+    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_os_family == 'RedHat' else omit }}"
     owner: root
   with_items:
     - healthcheck_ip.sh
@@ -22,7 +40,7 @@
 - name: "create keepalived include dir"
   file:
     path: "/etc/keepalived/conf.d"
-    mode: "755"
+    mode: "0755"
     state: directory
 
 - name: "create main configuration"
@@ -30,7 +48,7 @@
     src: "keepalived.conf.j2"
     dest: "/etc/keepalived/keepalived.conf"
     owner: root
-    mode: "644"
+    mode: "0644"
   notify: keepalived_restart
 
 - name: "create configuration files"
@@ -38,7 +56,7 @@
     src: "keepalived_vrrp.conf.j2"
     dest: "/etc/keepalived/conf.d/vrrp_{{ item.name }}.conf"
     owner: root
-    mode: "644"
+    mode: "0644"
   with_items: "{{ keepalived_vips }}"
   notify: keepalived_restart
 
@@ -49,6 +67,23 @@
     interface: "{{ item.vrrp_interface|default(item.interface) }}"
     direction: in
   with_items: "{{ keepalived_vips }}"
+  when: ansible_os_family == 'Debian'
+
+- name: "FirewallD: enable VRRP"
+  firewalld:
+    immediate: yes
+    permanent: yes
+    rich_rule: rule family="ipv4" protocol value="vrrp" accept
+    state: enabled
+  when: ansible_os_family == 'RedHat'
+
+- name: "FirewallD: enable AH multicast (keepalived authentication)"
+  firewalld:
+    immediate: yes
+    permanent: yes
+    rich_rule: rule family="ipv4" protocol value="ah" accept
+    state: enabled
+  when: ansible_os_family == 'RedHat'
 
 - name: Ensure Keepalived is enabled and started
   service:

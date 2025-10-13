@@ -2,11 +2,11 @@ vrrp_script {{ item.name }} {
 {% if item.healthcheck is not defined or item.healthcheck.type is not defined %}
 {{ notdefiend | mandatory(msg='healthcheck.type must be defined') }}
 {% elif item.healthcheck.type == "ip" %}
-  script "/usr/local/bin/healthcheck_ip.sh {{ item.healthcheck.host|default("localhost") }} {{ item.healthcheck.port }}"
+  script "/usr/libexec/keepalived/healthcheck_ip.sh {{ item.healthcheck.host|default("localhost") }} {{ item.healthcheck.port }}"
 {% elif item.healthcheck.type == "tls" %}
-  script "/usr/local/bin/healthcheck_tls.sh {{ item.healthcheck.host|default("localhost") }} {{ item.healthcheck.port }} {{ item.healthcheck.fqdn|default(item.healthcheck.host|default("localhost")) }} {{ '1' if item.healthcheck.verify_certs|default(false) else '0' }}"
+  script "/usr/libexec/keepalived/healthcheck_tls.sh {{ item.healthcheck.host|default("localhost") }} {{ item.healthcheck.port }} {{ item.healthcheck.fqdn|default(item.healthcheck.host|default("localhost")) }} {{ '1' if item.healthcheck.verify_certs|default(false) else '0' }}"
 {% elif item.healthcheck.type == "http" %}
-  script "/usr/local/bin/healthcheck_http.sh --url {{ item.healthcheck.url }} --max-time {{ item.healthcheck.timeout|default(10) }} --http-codes {{ item.healthcheck.http_codes|default("200") }} {{ "--no-validate-cert" if not item.healthcheck.verify_certs|default(false) else "" }} {{ ("--ip" ~ item.healthcheck.ip) if item.healthcheck.ip is defined else "" }}"
+  script "/usr/libexec/keepalived/healthcheck_http.sh --url {{ item.healthcheck.url }} --max-time {{ item.healthcheck.timeout|default(10) }} --http-codes {{ item.healthcheck.http_codes|default("200") }} {{ "--no-validate-cert" if not item.healthcheck.verify_certs|default(false) else "" }} {{ ("--ip" ~ item.healthcheck.ip) if item.healthcheck.ip is defined else "" }}"
 {% elif item.healthcheck.type == "script" %}
   script "{{ item.healthcheck.script }} {{ item.healthcheck.script_arg|default('') }}"
 {% else %}
