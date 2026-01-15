@@ -8,7 +8,7 @@ host=$1
 port=$2
 
 nc --version 2>&1 | grep nmap > /dev/null
-if [ "$?" == "0" ] ; then
+if [ "$?" = "0" ] ; then
   EXTRA_ARGS=""
 else
   # Need -q 0 on netcat-openbsd otherwise will hang
