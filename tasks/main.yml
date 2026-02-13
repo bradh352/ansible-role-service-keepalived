@@ -20,13 +20,13 @@
   when: ansible_os_family == 'RedHat'
 
 - name: "create keepalived script directory"
-  file:
+  ansible.builtin.file:
     path: /usr/libexec/keepalived
     setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_os_family == 'RedHat' else omit }}"
     state: directory
 
 - name: "install healthcheck scripts"
-  copy:
+  ansible.builtin.copy:
     src: "{{ item }}"
     dest: "/usr/libexec/keepalived/{{ item }}"
     mode: "0755"
@@ -38,13 +38,13 @@
     - healthcheck_http.sh
 
 - name: "create keepalived include dir"
-  file:
+  ansible.builtin.file:
     path: "/etc/keepalived/conf.d"
     mode: "0755"
     state: directory
 
 - name: "create main configuration"
-  template:
+  ansible.builtin.template:
     src: "keepalived.conf.j2"
     dest: "/etc/keepalived/keepalived.conf"
     owner: root
@@ -52,7 +52,7 @@
   notify: keepalived_restart
 
 - name: "create configuration files"
-  template:
+  ansible.builtin.template:
     src: "keepalived_vrrp.conf.j2"
     dest: "/etc/keepalived/conf.d/vrrp_{{ item.name }}.conf"
     owner: root
@@ -64,32 +64,32 @@
   community.general.ufw:
     rule: allow
     proto: vrrp
-    interface: "{{ item.vrrp_interface|default(item.interface) }}"
+    interface: "{{ item.vrrp_interface | default(item.interface) }}"
     direction: in
   with_items: "{{ keepalived_vips }}"
   when: ansible_os_family == 'Debian'
 
 - name: "FirewallD: enable VRRP"
-  firewalld:
-    immediate: yes
-    permanent: yes
+  ansible.posix.firewalld:
+    immediate: true
+    permanent: true
     rich_rule: rule family="ipv4" protocol value="vrrp" accept
     state: enabled
   when: ansible_os_family == 'RedHat'
 
 - name: "FirewallD: enable AH multicast (keepalived authentication)"
-  firewalld:
-    immediate: yes
-    permanent: yes
+  ansible.posix.firewalld:
+    immediate: true
+    permanent: true
     rich_rule: rule family="ipv4" protocol value="ah" accept
     state: enabled
   when: ansible_os_family == 'RedHat'
 
 - name: Ensure Keepalived is enabled and started
-  service:
+  ansible.builtin.service:
     name: keepalived
     enabled: true
     state: started
 
 - name: Flush Handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
