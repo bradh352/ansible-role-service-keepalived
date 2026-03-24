@@ -7,7 +7,7 @@
       - netcat-openbsd
       - openssl
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "DNF: install keepalived and helpers"
   ansible.builtin.dnf:
@@ -17,12 +17,12 @@
       - netcat
       - openssl
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "create keepalived script directory"
   ansible.builtin.file:
     path: /usr/libexec/keepalived
-    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_os_family == 'RedHat' else omit }}"
+    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_facts['os_family'] == 'RedHat' else omit }}"
     state: directory
 
 - name: "install healthcheck scripts"
@@ -30,7 +30,7 @@
     src: "{{ item }}"
     dest: "/usr/libexec/keepalived/{{ item }}"
     mode: "0755"
-    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_os_family == 'RedHat' else omit }}"
+    setype: "{{ 'keepalived_unconfined_script_exec_t' if ansible_facts['os_family'] == 'RedHat' else omit }}"
     owner: root
   with_items:
     - healthcheck_ip.sh
@@ -67,7 +67,7 @@
     interface: "{{ item.vrrp_interface | default(item.interface) }}"
     direction: in
   with_items: "{{ keepalived_vips }}"
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "FirewallD: enable VRRP"
   ansible.posix.firewalld:
@@ -75,7 +75,7 @@
     permanent: true
     rich_rule: rule family="ipv4" protocol value="vrrp" accept
     state: enabled
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "FirewallD: enable AH multicast (keepalived authentication)"
   ansible.posix.firewalld:
@@ -83,7 +83,7 @@
     permanent: true
     rich_rule: rule family="ipv4" protocol value="ah" accept
     state: enabled
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Ensure Keepalived is enabled and started
   ansible.builtin.service:
